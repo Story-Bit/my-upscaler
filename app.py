@@ -13,8 +13,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 OUTPUT_FOLDER = os.path.join(BASE_DIR, "output")
 
-# 🔥 `2X업스케일.PY` 실행 파일 경로
-UPSCALE_SCRIPT = r"C:\Users\hyeon\DungeonBreak\2X업스케일.PY"
+# 🔥 `2X업스케일.PY` 실행 파일 경로 (GitHub에 업로드한 후 경로 변경)
+UPSCALE_SCRIPT = os.path.join(BASE_DIR, "2X업스케일.PY")
 
 # 현재 가상 환경의 Python 실행 경로 가져오기
 PYTHON_EXECUTABLE = sys.executable  # Flask가 실행되는 Python 환경을 강제 적용
@@ -55,15 +55,11 @@ def upload_file():
             print(f"[STDOUT] {process.stdout}")
             print(f"[STDERR] {process.stderr}")
 
-            # 🔍 변환된 파일이 있는 폴더를 검색하여 올바른 파일 경로 찾기
-            output_folder = os.path.join(OUTPUT_FOLDER, filename)  # Real-ESRGAN이 생성한 하위 폴더
-            output_file = os.path.join(output_folder, filename.replace(".png", "_out.png"))  # 변환된 파일
+            # 🔍 변환된 파일이 있는지 확인
+            if not os.path.exists(output_path):
+                return f"업스케일된 파일이 존재하지 않습니다: {output_path}", 500
 
-            # 🔍 변환된 파일이 정상적인지 확인
-            if not os.path.exists(output_file):
-                return f"업스케일된 파일이 존재하지 않습니다: {output_file}", 500
-
-            img = cv2.imread(output_file)
+            img = cv2.imread(output_path)
             if img is None:
                 return "업스케일된 파일이 유효한 이미지가 아닙니다.", 500
 
@@ -71,7 +67,8 @@ def upload_file():
             print(f"[ERROR] 업스케일링 실행 중 오류 발생: {e}")
             return f"업스케일링 실행 중 오류 발생: {e}", 500
 
-        return send_file(output_file, mimetype='image/png')
+        return send_file(output_path, mimetype='image/png')
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 10000))  # Render 환경에서 PORT를 읽음
+    app.run(host="0.0.0.0", port=port, debug=True)
