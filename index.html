@@ -18,12 +18,32 @@
             font-size: 16px;
             cursor: pointer;
         }
+        #preview {
+            margin-top: 20px;
+            max-width: 100%;
+        }
     </style>
 </head>
 <body>
     <h1>무료 AI 이미지 업스케일링</h1>
     <p>이미지를 업로드하고 2배 해상도로 변환하세요!</p>
-    <input type="file" id="upload-btn">
-    <p>웹사이트 초기 버전입니다. 더 많은 기능이 곧 추가됩니다.</p>
+
+    <input type="file" id="upload-btn" accept="image/*">
+    <br><br>
+    <img id="preview" src="" alt="업로드한 이미지 미리보기" style="display: none; max-width: 300px;">
+
+    <script>
+        document.getElementById('upload-btn').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview').src = e.target.result;
+                    document.getElementById('preview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
 </body>
 </html>
