@@ -4,6 +4,7 @@ import sys
 import uuid
 import cv2
 from flask import Flask, request, send_file, render_template
+from flask_cors import CORS  # CORS 설정 추가
 
 # 현재 실행 중인 파일의 디렉토리
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -23,6 +24,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 app = Flask(__name__, template_folder="templates")
+CORS(app)
 
 @app.route('/')
 def index():
