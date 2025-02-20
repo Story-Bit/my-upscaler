@@ -1,2 +1,2 @@
-# AI 이미지 업스케일링
-AI를 활용하여 이미지를 2배 업스케일링하는 기능을 제공합니다.
+# AI image upscaling
+Utilize AI to upscale images by 2x for free.
