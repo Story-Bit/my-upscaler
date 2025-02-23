@@ -1,37 +1,43 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 이미지 업스케일링</title>
+    <title>AI Image Upscaler</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            padding: 10px;
+            padding: 20px;
             margin: 0;
+            background-color: #f4f4f4;
         }
         h1 {
             color: #333;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
         p {
-            font-size: 14px;
-            margin-bottom: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
         }
-        #upload-btn {
-            padding: 8px 15px;
-            font-size: 14px;
+        #upload-container {
+            border: 2px dashed #007bff;
+            padding: 30px;
             cursor: pointer;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            background-color: white;
+            display: inline-block;
+        }
+        #upload-container:hover {
+            background-color: #eef4ff;
         }
         .container {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 20px;
+            gap: 30px;
             flex-wrap: wrap;
-            margin-top: 5px;
+            margin-top: 10px;
         }
         .image-box {
             display: flex;
@@ -47,55 +53,96 @@
         }
         .image-box h3 {
             margin-bottom: 8px;
-            font-size: 16px;
+            font-size: 18px;
         }
         .button-container {
             display: flex;
             justify-content: center;
-            margin-top: 10px;
+            margin-top: 15px;
         }
         #download-btn {
             display: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: green;
+            padding: 12px 25px;
+            font-size: 18px;
+            background-color: #28a745;
             color: white;
             cursor: pointer;
             border: none;
             border-radius: 5px;
+            transition: 0.3s;
+        }
+        #download-btn:hover {
+            background-color: #218838;
+        }
+        #loading-text {
+            display: none;
+            font-size: 16px;
+            color: #888;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>무료 AI 이미지 업스케일링</h1>
-    <p>이미지를 업로드하고 2배 해상도로 변환하세요!</p>
-    
-    <input type="file" id="upload-btn" accept="image/*">
-    
+    <h1>Free AI Image Upscaler</h1>
+    <p>Upload an image and upscale it to 2X resolution with AI!</p>
+
+    <div id="upload-container">
+        <p>📂 Drag & Drop or Click to Upload</p>
+        <input type="file" id="upload-btn" accept="image/*" style="display: none;">
+    </div>
+
+    <div id="loading-text">Processing... Please wait.</div>
+
     <div class="container">
-        <!-- 업로드된 원본 이미지 (왼쪽) -->
+        <!-- Uploaded Image (Left) -->
         <div class="image-box">
-            <h3>업로드한 이미지</h3>
-            <img id="preview" src="" alt="업로드한 이미지 미리보기">
+            <h3>Uploaded Image</h3>
+            <img id="preview" src="" alt="Uploaded Image Preview">
         </div>
 
-        <!-- 변환된 이미지 (오른쪽) -->
+        <!-- Upscaled Image (Right) -->
         <div class="image-box">
-            <h3>변환된 이미지</h3>
-            <img id="result" src="" alt="업스케일된 이미지 미리보기">
+            <h3>Upscaled Image</h3>
+            <img id="result" src="" alt="Upscaled Image Preview">
         </div>
     </div>
 
-    <!-- 다운로드 버튼을 완전 중앙 정렬 -->
     <div class="button-container">
-        <button id="download-btn">다운로드</button>
+        <button id="download-btn">Download Image</button>
     </div>
 
     <script>
-        document.getElementById('upload-btn').addEventListener('change', function(event) {
-            const file = event.target.files[0];
+        const uploadContainer = document.getElementById("upload-container");
+        const uploadBtn = document.getElementById("upload-btn");
+        const loadingText = document.getElementById("loading-text");
+
+        // Click to Upload
+        uploadContainer.addEventListener("click", () => uploadBtn.click());
+
+        // Drag & Drop Feature
+        uploadContainer.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            uploadContainer.style.backgroundColor = "#eef4ff";
+        });
+
+        uploadContainer.addEventListener("dragleave", () => {
+            uploadContainer.style.backgroundColor = "white";
+        });
+
+        uploadContainer.addEventListener("drop", (event) => {
+            event.preventDefault();
+            uploadContainer.style.backgroundColor = "white";
+            uploadBtn.files = event.dataTransfer.files;
+            handleFileUpload(uploadBtn.files[0]);
+        });
+
+        // File Upload Handling
+        uploadBtn.addEventListener("change", (event) => {
+            handleFileUpload(event.target.files[0]);
+        });
+
+        function handleFileUpload(file) {
             if (file) {
-                // 업로드한 이미지 미리보기
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('preview').src = e.target.result;
@@ -103,7 +150,10 @@
                 };
                 reader.readAsDataURL(file);
 
-                // Flask 서버에 업로드 및 업스케일링 요청
+                // Show loading text
+                loadingText.style.display = "block";
+
+                // Upload to Flask Server
                 const formData = new FormData();
                 formData.append("file", file);
 
@@ -113,12 +163,13 @@
                 })
                 .then(response => response.blob())
                 .then(blob => {
-                    // 변환된 이미지 미리보기 표시
+                    loadingText.style.display = "none"; // Hide loading text
+
                     const url = URL.createObjectURL(blob);
                     document.getElementById('result').src = url;
                     document.getElementById('result').style.display = 'block';
 
-                    // 다운로드 버튼 활성화
+                    // Show Download Button
                     const downloadBtn = document.getElementById('download-btn');
                     downloadBtn.style.display = 'block';
                     downloadBtn.onclick = () => {
@@ -130,9 +181,12 @@
                         document.body.removeChild(a);
                     };
                 })
-                .catch(error => console.error("업로드 오류:", error));
+                .catch(error => {
+                    console.error("Upload Error:", error);
+                    loadingText.textContent = "Upload Failed. Please try again.";
+                });
             }
-        });
+        }
     </script>
 </body>
 </html>
