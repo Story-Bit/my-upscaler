@@ -11,3 +11,4 @@ pip
 setuptools
 wheel
 gunicorn
+flask
