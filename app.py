@@ -28,48 +28,53 @@ CORS(app)
 
 @app.route('/')
 def index():
+    """ 메인 페이지 렌더링 """
     return render_template("index.html")
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    file = request.files['file']
-    if file:
-        # 파일 저장 경로 설정
-        filename = f"{uuid.uuid4().hex}.png"
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
-        output_path = os.path.join(OUTPUT_FOLDER, filename)  # 변환 후 저장될 경로
+    """ 파일 업로드 및 2배 업스케일 실행 """
+    file = request.files.get('file')
+    if not file:
+        return "[ERROR] 파일이 제공되지 않았습니다.", 400
 
-        file.save(filepath)
-        print(f"[INFO] 파일 저장 완료: {filepath}")
+    # 파일 저장 경로 설정
+    filename = f"{uuid.uuid4().hex}.png"
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    output_path = os.path.join(OUTPUT_FOLDER, filename)  # 변환 후 저장될 경로
 
-        # 🔥 2배 업스케일 프로그램 실행 (`2X업스케일.PY`)
-        try:
-            upscale_command = [
-                PYTHON_EXECUTABLE, UPSCALE_SCRIPT, filepath, output_path
-            ]
-            print(f"[INFO] 실행 명령어: {' '.join(upscale_command)}")
+    # 파일 저장
+    file.save(filepath)
+    print(f"[INFO] 파일 저장 완료: {filepath}")
 
-            process = subprocess.run(upscale_command, capture_output=True, text=True)
-            print(f"[STDOUT] {process.stdout}")
-            print(f"[STDERR] {process.stderr}")
+    # 🔥 2배 업스케일 프로그램 실행 (`2X업스케일.PY`)
+    try:
+        upscale_command = [
+            PYTHON_EXECUTABLE, UPSCALE_SCRIPT, filepath, output_path
+        ]
+        print(f"[INFO] 실행 명령어: {' '.join(upscale_command)}")
 
-            # 실행 실패 시 예외 발생
-            if process.returncode != 0:
-                raise RuntimeError(f"[ERROR] 업스케일링 실행 중 오류 발생: {process.stderr}")
+        process = subprocess.run(upscale_command, capture_output=True, text=True)
+        print(f"[STDOUT] {process.stdout}")
+        print(f"[STDERR] {process.stderr}")
 
-        except Exception as e:
-            print(f"[ERROR] 업스케일링 실행 중 오류 발생: {e}")
-            return f"업스케일링 실행 중 오류 발생: {e}", 500
+        # 실행 실패 시 예외 발생
+        if process.returncode != 0:
+            raise RuntimeError(f"[ERROR] 업스케일링 실행 중 오류 발생: {process.stderr}")
 
-        # 🔍 변환된 파일이 있는지 확인
-        if not os.path.exists(output_path):
-            return f"[ERROR] 업스케일된 파일이 생성되지 않았습니다: {output_path}", 500
+    except Exception as e:
+        print(f"[ERROR] 업스케일링 실행 중 오류 발생: {e}")
+        return f"업스케일링 실행 중 오류 발생: {e}", 500
 
-        img = cv2.imread(output_path)
-        if img is None:
-            return f"[ERROR] 업스케일된 파일이 손상되었거나 올바른 이미지가 아닙니다: {output_path}", 500
+    # 🔍 변환된 파일이 있는지 확인
+    if not os.path.exists(output_path):
+        return f"[ERROR] 업스케일된 파일이 생성되지 않았습니다: {output_path}", 500
 
-        return send_file(output_path, mimetype='image/png')
+    img = cv2.imread(output_path)
+    if img is None:
+        return f"[ERROR] 업스케일된 파일이 손상되었거나 올바른 이미지가 아닙니다: {output_path}", 500
+
+    return send_file(output_path, mimetype='image/png')
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))  # Render 환경에서 PORT를 읽음
