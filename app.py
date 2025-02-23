@@ -42,10 +42,6 @@ def upload_file():
         file.save(filepath)
         print(f"[INFO] 파일 저장 완료: {filepath}")
 
-        # ✅ 파일이 정상적으로 저장되었는지 확인
-        if not os.path.exists(filepath):
-            return "File upload failed.", 500
-
         # 🔥 2배 업스케일 프로그램 실행 (`2X업스케일.PY`)
         try:
             upscale_command = [
