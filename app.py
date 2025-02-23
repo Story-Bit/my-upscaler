@@ -54,7 +54,8 @@ def upload_file():
         ]
         print(f"[INFO] 실행 명령어: {' '.join(upscale_command)}")
 
-        process = subprocess.run(upscale_command, capture_output=True, text=True)
+        process = subprocess.Popen(upscale_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
         print(f"[STDOUT] {process.stdout}")
         print(f"[STDERR] {process.stderr}")
 
